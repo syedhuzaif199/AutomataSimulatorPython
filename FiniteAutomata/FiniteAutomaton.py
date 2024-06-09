@@ -53,7 +53,7 @@ class DFA(FiniteAutomaton):
             
         return self.current_state
 
-    def run(self, in_string):
+    def run(self, in_string) -> bool:
         self.current_state = 0
         self.next(in_string)
         if self.current_state in self.final_states:
@@ -73,7 +73,7 @@ class DFA(FiniteAutomaton):
         enumerate_acc_states(0, accessible_states)
         final_states = [i for i in self.final_states if i in accessible_states]
 
-        distinguisher_table = [[False for i in accessible_states] for j in accessible_states]
+        distinguisher_table = [[False for i in range(self.num_states)] for j in range(self.num_states)]
         
         for final_state in final_states:
             for state in accessible_states:
@@ -85,32 +85,30 @@ class DFA(FiniteAutomaton):
             terminate = True
             for i in range(len(accessible_states)-1):
                 for j in range(i+1, len(accessible_states)):
-                    if distinguisher_table[i][j]:
+                    a,b = accessible_states[i], accessible_states[j]
+                    if distinguisher_table[a][b]:
                         continue
                     for c in self.alphabet:
-                        p, q = self.transitions[(i,c)], self.transitions[(j,c)]
+                        p, q = self.transitions[(a,c)], self.transitions[(b,c)]
                         if distinguisher_table[p][q]:
-                            distinguisher_table[i][j] = distinguisher_table[j][i] = True
+                            distinguisher_table[a][b] = distinguisher_table[b][a] = True
                             terminate = False
             if terminate:
                 break
     
         eq_classes = [[i] for i in accessible_states]
-        print("Eq classes before:", eq_classes)
         for i in range(len(accessible_states)-1):
             for j in range(i+1, len(accessible_states)):
-                if not distinguisher_table[i][j] and i != j:
-                    print("removing [i]:", [i])
-                    print("removing [j]:", [j])
-                    if [j] in eq_classes:
-                        eq_classes.remove([j])
+                a, b = accessible_states[i], accessible_states[j]
+                if not distinguisher_table[a][b] and a != b:
+                    if [b] in eq_classes:
+                        eq_classes.remove([b])
                     temp_idx = 0
                     for temp in eq_classes:
-                        if i in temp:
+                        if a in temp:
                             temp_idx = eq_classes.index(temp)
                             break
-                    eq_classes[temp_idx].append(j)
-        print("Eq classes:", eq_classes)
+                    eq_classes[temp_idx].append(b)
         
         transitions = {}
         for i, eqclass in enumerate(eq_classes):
@@ -121,13 +119,14 @@ class DFA(FiniteAutomaton):
 
         for state, c in self.transitions.keys():
             trans = self.transitions[(state,c)]
+            if state not in accessible_states:
+                continue
             for i, eqclass in enumerate(eq_classes):
                 if state in eqclass:
                     start_state = indexes[i]
                 if trans in eqclass:
                     end_state = indexes[i]
             transitions[(start_state, c)] = end_state
-
 
         final_states = []
         for i, eqclass in enumerate(eq_classes):
@@ -160,7 +159,7 @@ class NFA(FiniteAutomaton):
         else:
             self.transitions[(origin_state, input_symbols)] = end_states
 
-    def null_closure(self, states: set[int], reached=None):
+    def null_closure(self, states: set[int], reached=None) -> set[int]:
         assert all(n in range(self.num_states) for n in states), f"An accept state is out of bounds: [0, {self.num_states-1}]"
         # Having an empty set as a default parameter value for 'reached' doesn't work, as 'reached' acts as a static variable and isn't assign a new instance of 'set' each time
         # this method is called, but rather it is assigned a new instance on the very first call and the subsequent method calls use the same instance
@@ -173,7 +172,7 @@ class NFA(FiniteAutomaton):
                 closure.update(self.null_closure(self.transitions[(state, None)]-reached, reached))
         return closure
         
-    def run(self, in_string):
+    def run(self, in_string) -> bool:
         s = self.null_closure({0})
         for c in in_string:
             moves = set()
@@ -184,7 +183,7 @@ class NFA(FiniteAutomaton):
 
         return len(s.intersection(self.final_states)) != 0
 
-    def generate_dfa(self):
+    def generate_dfa(self) -> DFA:
         dfa_alpha = self.alphabet[:]
         dfa_alpha.remove(None)
         dfa_states = []
