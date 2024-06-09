@@ -19,6 +19,28 @@ def main():
     print(dfa.transitions)
 
 
+    dfa2 = DFA(6, "01", [3,5])
+    dfa2.add_transitions([
+        (0,1,"0"),
+        (0,3,"1"),
+        (1,0,"0"),
+        (1,3,"1"),
+        (2,1,"0"),
+        (2,4,"1"),
+        (3,5,"0"),
+        (3,5,"1"),
+        (4,3,"0"),
+        (4,3,"1"),
+        (5,5,"0"),
+        (5,5,"1"),
+    ])
+
+    min_dfa = dfa2.get_minimized()
+    print(min_dfa.num_states)
+    print(min_dfa.transitions)
+    print(min_dfa.final_states)
+
+
 if __name__ == "__main__":
     main()
     

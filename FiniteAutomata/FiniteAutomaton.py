@@ -60,6 +60,85 @@ class DFA(FiniteAutomaton):
             return True
         else:
             return False
+        
+    def get_minimized(self):
+        accessible_states = []
+        def enumerate_acc_states(state, accessible_states):
+            if state in accessible_states:
+                return
+            accessible_states.append(state)
+            for c in self.alphabet:
+                enumerate_acc_states(self.transitions[(state, c)], accessible_states)
+
+        enumerate_acc_states(0, accessible_states)
+        final_states = [i for i in self.final_states if i in accessible_states]
+
+        distinguisher_table = [[False for i in accessible_states] for j in accessible_states]
+        
+        for final_state in final_states:
+            for state in accessible_states:
+                if state in final_states:
+                    continue
+
+                distinguisher_table[final_state][state] = distinguisher_table[state][final_state] = True
+        while(True):
+            terminate = True
+            for i in range(len(accessible_states)-1):
+                for j in range(i+1, len(accessible_states)):
+                    if distinguisher_table[i][j]:
+                        continue
+                    for c in self.alphabet:
+                        p, q = self.transitions[(i,c)], self.transitions[(j,c)]
+                        if distinguisher_table[p][q]:
+                            distinguisher_table[i][j] = distinguisher_table[j][i] = True
+                            terminate = False
+            if terminate:
+                break
+    
+        eq_classes = [[i] for i in accessible_states]
+        print("Eq classes before:", eq_classes)
+        for i in range(len(accessible_states)-1):
+            for j in range(i+1, len(accessible_states)):
+                if not distinguisher_table[i][j] and i != j:
+                    print("removing [i]:", [i])
+                    print("removing [j]:", [j])
+                    if [j] in eq_classes:
+                        eq_classes.remove([j])
+                    temp_idx = 0
+                    for temp in eq_classes:
+                        if i in temp:
+                            temp_idx = eq_classes.index(temp)
+                            break
+                    eq_classes[temp_idx].append(j)
+        print("Eq classes:", eq_classes)
+        
+        transitions = {}
+        for i, eqclass in enumerate(eq_classes):
+            if 0 in eqclass:
+                initial_state = i
+
+        indexes = [(i-initial_state)%len(eq_classes) for i in range(len(eq_classes))]
+
+        for state, c in self.transitions.keys():
+            trans = self.transitions[(state,c)]
+            for i, eqclass in enumerate(eq_classes):
+                if state in eqclass:
+                    start_state = indexes[i]
+                if trans in eqclass:
+                    end_state = indexes[i]
+            transitions[(start_state, c)] = end_state
+
+
+        final_states = []
+        for i, eqclass in enumerate(eq_classes):
+            if any(fstate in eqclass for fstate in self.final_states):
+                final_states.append(indexes[i])
+        
+        min_dfa = DFA(len(eq_classes), self.alphabet[:], final_states)
+        min_dfa.transitions = transitions
+        return min_dfa
+
+
 
 
 class NFA(FiniteAutomaton):
