@@ -1,5 +1,5 @@
 class FiniteAutomaton:
-    def __init__(self, num_states: int | list[int], alphabet:str| list[str], final_states=[]):
+    def __init__(self, num_states: int, alphabet:str| list[str], final_states=[]):
         assert isinstance(alphabet, str) or isinstance(alphabet, list) and all(isinstance(c, str) for c in alphabet), "The alphabet should be either a string or a list of strings"
         assert num_states > 0, "The value of num_states cannot be less than 1"
         
