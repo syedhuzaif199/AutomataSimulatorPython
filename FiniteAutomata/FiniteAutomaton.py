@@ -146,6 +146,7 @@ class NFA(FiniteAutomaton):
         super().__init__(num_states, alphabet, final_states)
         self.alphabet.append(None)
 
+    # Override
     def add_transition(self, origin_state:int, end_states:set[int], input_symbols:str | list[str] | None):
         assert origin_state in range(self.num_states), f"the value of origin_state ({origin_state}) is out of bounds: [0, {self.num_states-1}]"
         assert isinstance(end_states, set), "end_states must be a set of integers"
