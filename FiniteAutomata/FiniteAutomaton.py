@@ -29,19 +29,6 @@ class FiniteAutomaton:
             self.add_transition(t[0], t[1], t[2])
 
 class DFA(FiniteAutomaton):
-    def run(self, in_string):
-        assert isinstance(in_string, str), "The parameter 'in_string' is not a string (type str)"
-        self.current_state = 0
-        for c in in_string:
-            if (self.current_state, c) in self.transitions.keys():
-                self.current_state = self.transitions[(self.current_state, c)]
-            else:
-                return None #implies error
-            
-        if self.current_state in self.final_states:
-            return True
-        else:
-            return False
 
     def next(self, in_string):
         assert isinstance(in_string, str), "The parameter 'in_string' is not a string (type str)"
